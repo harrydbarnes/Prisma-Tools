@@ -1,0 +1,99 @@
+{
+  "reviewed_branch": "r1.9",
+  "reviewed_commit": "b5a723e6d8f6acfeeb80e9a590eb57f12229b92d",
+  "review_date": "2026-09-05",
+  "node": "v24.19.0",
+  "baseline_tests": {
+    "suites": 77,
+    "passed_tests": 742,
+    "failed_tests": 1,
+    "failure": "Stats start-date test assumes UTC midnight; implementation uses local midnight"
+  },
+  "history_tests": {
+    "passed_tests": 16
+  },
+  "syntax_checked_files": 148,
+  "audit_counts": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 3,
+    "critical": 0,
+    "total": 3
+  },
+  "audit_findings": [
+    {
+      "name": "brace-expansion",
+      "severity": "high",
+      "isDirect": false,
+      "range": "<=1.1.17 || 2.0.0 - 2.1.3",
+      "fixAvailable": true
+    },
+    {
+      "name": "browserslist",
+      "severity": "high",
+      "isDirect": false,
+      "range": "<=4.28.6",
+      "fixAvailable": true
+    },
+    {
+      "name": "js-yaml",
+      "severity": "high",
+      "isDirect": false,
+      "range": "3.0.0 - 3.15.0",
+      "fixAvailable": true
+    }
+  ],
+  "outdated": {
+    "@babel/core": {
+      "current": "7.29.7",
+      "wanted": "7.29.7",
+      "latest": "8.0.1"
+    },
+    "@babel/preset-env": {
+      "current": "7.28.5",
+      "wanted": "7.29.7",
+      "latest": "8.0.2"
+    },
+    "babel-jest": {
+      "current": "30.4.1",
+      "wanted": "30.5.1",
+      "latest": "30.5.1"
+    },
+    "husky": {
+      "current": "8.0.3",
+      "wanted": "8.0.3",
+      "latest": "9.1.7"
+    },
+    "jest": {
+      "current": "30.4.2",
+      "wanted": "30.5.1",
+      "latest": "30.5.1"
+    },
+    "jest-environment-jsdom": {
+      "current": "30.4.1",
+      "wanted": "30.5.1",
+      "latest": "30.5.1"
+    },
+    "jsdom": {
+      "current": "26.1.0",
+      "wanted": "26.1.0",
+      "latest": "30.0.1"
+    }
+  },
+  "browser": "Local previews blocked with ERR_BLOCKED_BY_CLIENT; no live Prisma visual QA",
+  "wiki": "Clone inaccessible; no publication or existing-page coverage claimed",
+  "benchmark": {
+    "mutation_batches": 80,
+    "fast_reconciliations": 1,
+    "deferred_reconciliations": 1,
+    "extension_noise_feature_calls": 0,
+    "scheduler_elapsed_ms": 0.09
+  },
+  "final_tests": {
+    "timezone": "UTC",
+    "passed_suites": 77,
+    "passed_tests": 744,
+    "failed_tests": 0
+  }
+}
