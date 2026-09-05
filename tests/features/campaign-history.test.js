@@ -707,3 +707,34 @@ describe('campaign history feature', () => {
         dom.window.close();
     });
 });
+
+
+test('resizes history with keyboard and pointer, clamps to viewport, and resets on close', async () => {
+    const { dom } = createPage();
+    const { window } = dom;
+    try {
+        await flushPromises();
+        window.campaignHistoryFeature.open();
+        const panel = window.document.getElementById('toolshed-campaign-history-panel');
+        const handle = panel.querySelector('.toolshed-campaign-history-resize');
+        panel.getBoundingClientRect = () => ({left: 366, right: 1006, top: 62, width: 640, height: 400});
+        expect(panel.style.width).toBe('');
+        handle.dispatchEvent(new window.KeyboardEvent('keydown', {key: 'ArrowLeft', bubbles: true}));
+        expect(panel.style.width).toBe('664px');
+        expect(panel.style.left).toBe('342px');
+        handle.dispatchEvent(new window.KeyboardEvent('keydown', {key: 'ArrowDown', bubbles: true}));
+        expect(panel.style.height).toBe('424px');
+        handle.dispatchEvent(new window.KeyboardEvent('keydown', {key: 'Home', bubbles: true}));
+        expect(panel.style.width).toBe('');
+        handle.setPointerCapture = jest.fn();
+        handle.dispatchEvent(new window.MouseEvent('pointerdown', {button: 0, clientX: 366, clientY: 462}));
+        handle.dispatchEvent(new window.MouseEvent('pointermove', {clientX: -1000, clientY: 2000}));
+        expect(panel.style.left).toBe('8px');
+        expect(Number.parseFloat(panel.style.height)).toBe(window.innerHeight - 70);
+        handle.dispatchEvent(new window.MouseEvent('pointerup'));
+        expect(panel.classList.contains('is-resizing')).toBe(false);
+        window.campaignHistoryFeature.close({animate: false});
+        expect(panel.style.width).toBe('');
+        expect(panel.classList.contains('is-manually-sized')).toBe(false);
+    } finally { window.close(); }
+});

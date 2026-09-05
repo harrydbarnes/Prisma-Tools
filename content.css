@@ -1420,6 +1420,34 @@ div[slot="right"].ai-style-change-1 {
     display: none !important;
 }
 
+.toolshed-campaign-history-resize {
+    position: absolute;
+    bottom: 1px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    background: #fff;
+    color: #667582;
+    cursor: nesw-resize;
+    touch-action: none;
+}
+
+.toolshed-campaign-history-resize:focus-visible {
+    outline: 2px solid #0875ca;
+    outline-offset: -2px;
+}
+
+#toolshed-campaign-history-panel.is-expanded .toolshed-campaign-history-resize {
+    display: none;
+}
+
+#toolshed-campaign-history-panel.is-resizing,
+#toolshed-campaign-history-panel.is-manually-sized {
+    transition: transform 240ms ease, opacity 180ms ease;
+}
+
 #toolshed-campaign-history-panel.is-open {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -1881,7 +1909,9 @@ div[slot="right"].ai-style-change-1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #toolshed-campaign-history-panel {
+    #toolshed-campaign-history-panel,
+    #toolshed-campaign-history-panel.is-manually-sized,
+    #toolshed-campaign-history-panel.is-resizing {
         transition: none;
     }
 

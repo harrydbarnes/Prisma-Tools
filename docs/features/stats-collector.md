@@ -1,0 +1,30 @@
+# Stats Collector
+
+Draft feature guide for Ops Toolshed r1.9. Based on the reviewed source; live Prisma verification is still pending.
+
+## What it does
+
+Records waiting-time and productivity signals for the local Toolshed statistics view.
+
+## Find and use it
+
+1. Open **Settings > Features** from the extension popup.
+2. Search for **Stats Collector** and select the matching option. Its default is **true**.
+3. Open Release Notes, Roadmap & Stats to see local visits, placements, reconciliations, waiting time and activity summaries. Disable collection in Settings if unwanted; use the Stats reset control to clear tracked activity. These are local productivity signals and do not constitute a shared operational reporting database.
+
+## If it is missing or behaves unexpectedly
+
+Check that the popup’s **Features on** switch is enabled and that this individual setting is on. After reloading or updating the extension, reload the Prisma tab so it receives the current scripts. Features appear only where the relevant native Prisma controls exist; the extension does not add account permissions. Include the active route and whether you were in Plan, Buy, Actualise or Orders when reporting a problem.
+
+## Storage and dependencies
+
+The option uses Chrome sync storage key `statsCollectorEnabled`. Feature behaviour is implemented in `features/stats-collector.js` and depends on the extension’s manifest script ordering. Campaign history, stats, remembered details and other local data have their own lifecycle; disabling an option is not equivalent to deleting its data.
+
+## Documentation before this draft
+
+README summary; Settings preview (358). This draft adds a standalone usage and troubleshooting page; brief UI descriptions and release notes are not complete operating instructions.
+
+## Source references
+
+- [settings.js:358](https://github.com/harrydbarnes/Ops-Toolshed-Extension/blob/b5a723e6d8f6acfeeb80e9a590eb57f12229b92d/settings.js#L358)
+- [features/stats-collector.js:1](https://github.com/harrydbarnes/Ops-Toolshed-Extension/blob/b5a723e6d8f6acfeeb80e9a590eb57f12229b92d/features/stats-collector.js#L1)

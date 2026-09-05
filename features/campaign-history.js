@@ -1222,6 +1222,58 @@
         pagination.append(previousButton, pageIndicator, nextButton);
         panel.appendChild(pagination);
 
+        const resizeHandle = createButton('toolshed-campaign-history-resize',
+            'Resize campaign history. Use arrow keys; Home resets the size.');
+        resizeHandle.title = 'Drag to resize, or use arrow keys. Home resets the size.';
+        resizeHandle.textContent = '↙';
+        let drag = null;
+        const resize = (rect, dx, dy) => {
+            clearPanelGeometryCleanup();
+            const right = Math.min(rect.right, window.innerWidth - 8);
+            const top = Math.min(rect.top, Math.max(8, window.innerHeight - 200));
+            const width = Math.min(Math.max(320, rect.width - dx), Math.max(0, right - 8));
+            const height = Math.min(Math.max(240, rect.height + dy), Math.max(0, window.innerHeight - top - 8));
+            setInlinePanelGeometry(panel, { left: right - width, top, width, height });
+            panel.classList.add('is-manually-sized');
+        };
+        const finishResize = () => {
+            drag = null;
+            panel.classList.remove('is-resizing');
+        };
+        resizeHandle.addEventListener('pointerdown', event => {
+            if (event.button !== 0 || panel.classList.contains('is-expanded')) return;
+            event.preventDefault();
+            resizeHandle.focus();
+            drag = { rect: panel.getBoundingClientRect(), x: event.clientX, y: event.clientY };
+            panel.classList.add('is-resizing');
+            resizeHandle.setPointerCapture(event.pointerId);
+        });
+        resizeHandle.addEventListener('pointermove', event => {
+            if (drag) resize(drag.rect, event.clientX - drag.x, event.clientY - drag.y);
+        });
+        resizeHandle.addEventListener('pointerup', finishResize);
+        resizeHandle.addEventListener('pointercancel', finishResize);
+        resizeHandle.addEventListener('lostpointercapture', finishResize);
+        resizeHandle.addEventListener('keydown', event => {
+            if (panel.classList.contains('is-expanded')) return;
+            if (event.key === 'Home') {
+                event.preventDefault();
+                clearPanelGeometryCleanup();
+                clearInlinePanelGeometry(panel);
+                return;
+            }
+            const deltas = { ArrowLeft: [-24, 0], ArrowRight: [24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] };
+            if (!deltas[event.key]) return;
+            event.preventDefault();
+            resize(panel.getBoundingClientRect(), ...deltas[event.key]);
+        });
+        panel.appendChild(resizeHandle);
+        window.addEventListener('resize', () => {
+            if (!panel.hidden && panel.classList.contains('is-manually-sized')) {
+                resize(panel.getBoundingClientRect(), 0, 0);
+            }
+        });
+
         document.body.appendChild(panel);
         return panel;
     }
@@ -1255,6 +1307,7 @@
     }
 
     function clearInlinePanelGeometry(panel) {
+        panel.classList.remove('is-manually-sized', 'is-resizing');
         ['top', 'right', 'bottom', 'left', 'width', 'height', 'max-height']
             .forEach(property => panel.style.removeProperty(property));
     }
@@ -1324,6 +1377,7 @@
 
     function animatePanelGeometry(panel, expanded, prepareCollapsedPanel) {
         clearPanelGeometryCleanup();
+        panel.classList.remove('is-manually-sized', 'is-resizing');
         const currentRect = panel.getBoundingClientRect();
         setInlinePanelGeometry(panel, currentRect);
 
