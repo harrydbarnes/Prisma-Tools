@@ -47,6 +47,7 @@ const EXPECTED_DEFAULTS = {
     actualiseScrollRestoreEnabled: true,
     actualiseNavbarEnabled: true,
     campaignTabTitleEnabled: true,
+    planToBuyRedirectEnabled: true,
     gmiChatShortcutEnabled: true,
     autoCopyUrlEnabled: true,
     loadingFactsEnabled: true,

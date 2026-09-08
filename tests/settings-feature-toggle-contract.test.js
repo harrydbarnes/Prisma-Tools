@@ -18,6 +18,7 @@ const FEATURE_TOGGLE_KEYS = {
     approverSubmittedRecipientDisplayToggle: 'approverSubmittedRecipientDisplayEnabled',
     actualiseBulkExportToggle: 'actualiseBulkExportEnabled',
     campaignTabTitleToggle: 'campaignTabTitleEnabled',
+    planToBuyRedirectToggle: 'planToBuyRedirectEnabled',
     ordersShortcutToggle: 'ordersShortcutEnabled',
     actualiseShortcutToggle: 'actualiseShortcutEnabled',
     actualiseNavbarToggle: 'actualiseNavbarEnabled',

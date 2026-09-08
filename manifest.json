@@ -96,6 +96,7 @@
         "features/campaign-history.js",
         "features/product-code-limit-warning.js",
         "features/campaign-tab-title.js",
+        "features/plan-to-buy-redirect.js",
         "features/d-number-search.js",
         "features/gmi-chat.js",
         "features/live-chat-enhancements.js",

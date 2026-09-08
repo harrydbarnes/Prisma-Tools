@@ -31,7 +31,8 @@ describe('campaign navigation settings', () => {
         ['campaignDateShortcutToggle', 'campaignDateShortcutEnabled'],
         ['newOrderUiOptimisationToggle', 'newOrderUiOptimisationEnabled'],
         ['actualiseScrollRestoreToggle', 'actualiseScrollRestoreEnabled'],
-        ['actualiseNavbarToggle', 'actualiseNavbarEnabled']
+        ['actualiseNavbarToggle', 'actualiseNavbarEnabled'],
+        ['planToBuyRedirectToggle', 'planToBuyRedirectEnabled']
     ])('exposes enabled-by-default sub-option %s', (toggleId, storageKey) => {
         expect(settingsHtml).toContain(`id="${toggleId}"`);
         expect(settingsScript).toContain(`setupToggle('${toggleId}', '${storageKey}'`);

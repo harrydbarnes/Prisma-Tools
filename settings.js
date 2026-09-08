@@ -60,6 +60,7 @@ const SETTINGS_DEFAULTS = Object.freeze({
     actualiseScrollRestoreEnabled: true,
     actualiseNavbarEnabled: true,
     campaignTabTitleEnabled: true,
+    planToBuyRedirectEnabled: true,
     gmiChatShortcutEnabled: true,
     autoCopyUrlEnabled: true,
     loadingFactsEnabled: true,
@@ -322,6 +323,7 @@ const FEATURE_SETTING_PREVIEWS = {
     approverSubmittedRecipientDisplayToggle: ['Submitted approval recipients', 'Shows the email address(es) captured when the current user submits a campaign for approval.', 'Submitted to robert.walker@wppmedia.com'],
     actualiseBulkExportToggle: ['Actualise bulk export', 'Exports each visible Actualise month and combines the results into one CSV-ready file.', 'Export all months'],
     campaignTabTitleToggle: ['Campaign tab title', 'Uses the active campaign name as the browser tab title.', 'Spring Launch | Prisma'],
+    planToBuyRedirectToggle: ['Open Plan campaign links in Buy', 'Opens Buy when a campaign Plan URL is loaded directly. Clicking Prisma’s Plan tab still opens Plan.', 'Plan link → Buy'],
     campaignHistoryToggle: ['Campaign History search', 'Adds a History link to Prisma campaign navigation and lets you search campaigns you have visited.', 'Search supplier'],
     campaignHistoryLoggingToggle: ['Log campaigns visited', 'Records campaign names, references, supplier details and active account locations locally so they can be found later in Campaign History.', 'Campaign recorded'],
     ordersShortcutToggle: ['Orders shortcut', 'Adds an Orders shortcut to the campaign navigation menu.', 'Orders'],
@@ -1164,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupToggle('actualiseScrollRestoreToggle', 'actualiseScrollRestoreEnabled', 'Actualise scroll restoration setting saved:', settings);
     setupToggle('actualiseNavbarToggle', 'actualiseNavbarEnabled', 'Actualise navigation bar setting saved:', settings);
     setupToggle('campaignTabTitleToggle', 'campaignTabTitleEnabled', 'Campaign tab title setting saved:', settings);
+    setupToggle('planToBuyRedirectToggle', 'planToBuyRedirectEnabled', 'Plan to Buy redirect setting saved:', settings);
     setupToggle('gmiChatShortcutToggle', 'gmiChatShortcutEnabled', 'GMI Chat Shortcut setting saved:', settings);
     setupToggle('autoCopyUrlToggle', 'autoCopyUrlEnabled', 'Auto Copy URL setting saved:', settings);
     setupToggle('loadingFactsToggle', 'loadingFactsEnabled', 'Show Loading Facts setting saved:', settings);

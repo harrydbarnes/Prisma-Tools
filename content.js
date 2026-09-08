@@ -286,6 +286,7 @@ async function mainContentScriptInit() {
         { getFeature: () => window.autoCopyUrlFeature, when: route => (isPrismaLike || isAura) && route.isCampaignWorkspace },
         { getFeature: () => window.liveChatEnhancements, when: route => isPrismaLike && route.isCampaignWorkspace },
         { getFeature: () => window.campaignTabTitleFeature, when: route => isPrismaLike && route.isCampaignWorkspace },
+        { getFeature: () => window.planToBuyRedirectFeature, when: () => isPrismaLike },
         { getFeature: () => window.campaignHistoryFeature, when: () => isPrismaLike },
         { getFeature: () => window.swapAccountsFeature, when: () => isPrismaLike || isAura },
         { getFeature: () => window.orderIdCopyFeature, when: route => isPrismaLike && route.isCampaignWorkspace },
