@@ -6,6 +6,7 @@
     const SETTINGS_KEY_TRACKING = 'approvalTrackingEnabled';
     const SETTINGS_KEY_BANNER = 'approvalBannerIndicatorEnabled';
     const SETTINGS_KEY_TOAST = 'approvalToastNotificationEnabled';
+    const BANNER_HOST_SELECTOR = 'mo-banner, mo-banner-user-menu, mo-banner-user-menu-content';
 
     let trackingEnabled = true;
     let bannerEnabled = true;
@@ -15,6 +16,10 @@
     let currentPanel = null;
     let currentOutsideClickHandler = null;
     let panelCloseTimer = null;
+    let bannerLifecycleObserver = null;
+    let bannerObservedRoots = new WeakSet();
+    let bannerInjectionQueued = false;
+    let bannerLifecycleEventsBound = false;
     const shownToastCampaignIds = new Set();
 
     function truncateString(str, maxLength) {
@@ -704,6 +709,122 @@
         }
     }
 
+    function getBannerRoots() {
+        const roots = [document];
+        const discovered = [];
+        const visited = new Set();
+
+        while (roots.length) {
+            const root = roots.shift();
+            if (!root || visited.has(root)) continue;
+            visited.add(root);
+            discovered.push(root);
+
+            const hosts = [];
+            if (root.nodeType === 1 && root.matches?.(BANNER_HOST_SELECTOR)) hosts.push(root);
+            root.querySelectorAll?.(BANNER_HOST_SELECTOR).forEach(host => hosts.push(host));
+            hosts.forEach(host => {
+                if (host.shadowRoot) roots.push(host.shadowRoot);
+            });
+        }
+
+        return discovered;
+    }
+
+    function findBannerUserMenu() {
+        for (const root of getBannerRoots()) {
+            if (root.nodeType === 1 && root.matches?.('mo-banner-user-menu')) return root;
+            const userMenu = root.querySelector?.('mo-banner-user-menu');
+            if (userMenu) return userMenu;
+        }
+        return null;
+    }
+
+    function scheduleBannerInjection() {
+        if (bannerInjectionQueued || !bannerEnabled) return;
+        bannerInjectionQueued = true;
+        const schedule = window.queueMicrotask || (callback => Promise.resolve().then(callback));
+        schedule(() => {
+            bannerInjectionQueued = false;
+            injectBannerButton();
+        });
+    }
+
+    function mutationContainsBannerHost(mutation) {
+        const targetElement = mutation.target?.nodeType === 1 ? mutation.target : mutation.target?.parentElement;
+        if (targetElement?.closest?.('.toolshed-approval-banner-button, #toolshed-approval-banner-styles')) {
+            return false;
+        }
+
+        const removedNodes = Array.from(mutation.removedNodes || []);
+        const removedBannerButton = removedNodes.some(node => node?.nodeType === 1 && (
+            node.classList?.contains('toolshed-approval-banner-button') ||
+            node.querySelector?.('.toolshed-approval-banner-button')
+        ));
+        if (removedBannerButton) return true;
+
+        const addedNodes = Array.from(mutation.addedNodes || []);
+        const onlyExtensionNodes = addedNodes.length > 0 && addedNodes.every(node => {
+            if (node?.nodeType !== 1) return false;
+            return node.classList?.contains('toolshed-approval-banner-button') ||
+                node.id === 'toolshed-approval-banner-styles';
+        });
+        if (onlyExtensionNodes && removedNodes.length === 0) return false;
+
+        const mutationRoot = mutation.target?.getRootNode?.();
+        if (mutationRoot && mutationRoot !== document && bannerObservedRoots.has(mutationRoot)) {
+            return true;
+        }
+
+        const nodes = [
+            ...addedNodes,
+            ...removedNodes
+        ];
+        return nodes.some(node => node?.nodeType === 1 && (
+            node.matches?.(BANNER_HOST_SELECTOR) ||
+            node.querySelector?.(BANNER_HOST_SELECTOR)
+        ));
+    }
+
+    function observeBannerRoots() {
+        const Observer = window.MutationObserver ||
+            (typeof MutationObserver !== 'undefined' ? MutationObserver : null);
+        if (!Observer || !document.body) return;
+
+        if (!bannerLifecycleObserver) {
+            bannerLifecycleObserver = new Observer(mutations => {
+                if (!mutations.some(mutationContainsBannerHost)) return;
+                observeBannerRoots();
+                scheduleBannerInjection();
+            });
+        }
+
+        const roots = [document.body, ...getBannerRoots().filter(root => root !== document)];
+        roots.forEach(root => {
+            if (bannerObservedRoots.has(root)) return;
+            bannerLifecycleObserver.observe(root, { childList: true, subtree: true });
+            bannerObservedRoots.add(root);
+        });
+    }
+
+    function startBannerLifecycle() {
+        if (!bannerEnabled) return;
+        observeBannerRoots();
+        scheduleBannerInjection();
+    }
+
+    function stopBannerLifecycle() {
+        bannerLifecycleObserver?.takeRecords?.();
+        bannerLifecycleObserver?.disconnect();
+        bannerLifecycleObserver = null;
+        bannerObservedRoots = new WeakSet();
+        bannerInjectionQueued = false;
+    }
+
+    function handleBannerVisibilityChange() {
+        if (document.visibilityState === 'visible') startBannerLifecycle();
+    }
+
     async function injectBannerButton() {
         if (!bannerEnabled) return;
         if (bannerButton && bannerButton.isConnected) {
@@ -712,15 +833,12 @@
         }
 
         try {
-            let userMenu = document.querySelector('mo-banner-user-menu');
-            if (!userMenu && window.utils && typeof window.utils.waitForElementInShadow === 'function') {
-                try {
-                    userMenu = await window.utils.waitForElementInShadow('mo-banner-user-menu', document, 3000);
-                } catch (_e) {}
-            }
-
+            const userMenu = findBannerUserMenu();
             const parent = userMenu ? userMenu.parentElement : null;
-            if (!parent) return;
+            if (!parent) {
+                observeBannerRoots();
+                return;
+            }
 
             // Inject styles inside Shadow Root / parent container if not already present
             const rootNode = parent.getRootNode ? parent.getRootNode() : null;
@@ -921,7 +1039,11 @@
                 }
                 if (changes[SETTINGS_KEY_BANNER]) {
                     bannerEnabled = changes[SETTINGS_KEY_BANNER].newValue !== false;
-                    updateBannerIndicator();
+                    if (bannerEnabled) startBannerLifecycle();
+                    else {
+                        stopBannerLifecycle();
+                        updateBannerIndicator();
+                    }
                 }
                 if (changes[SETTINGS_KEY_TOAST]) {
                     toastEnabled = changes[SETTINGS_KEY_TOAST].newValue !== false;
@@ -934,7 +1056,7 @@
     // --- Init ---
     function initialize() {
         if (isInitialized) {
-            injectBannerButton();
+            startBannerLifecycle();
             return;
         }
         isInitialized = true;
@@ -950,7 +1072,13 @@
 
             bindListeners();
             setupSubmissionCapture();
-            injectBannerButton();
+            if (!bannerLifecycleEventsBound) {
+                bannerLifecycleEventsBound = true;
+                window.addEventListener('pagehide', stopBannerLifecycle);
+                window.addEventListener('pageshow', startBannerLifecycle);
+                document.addEventListener('visibilitychange', handleBannerVisibilityChange);
+            }
+            startBannerLifecycle();
 
             // Re-check live widget periodically when viewing a campaign
             setInterval(checkLiveWorkflowWidget, 10000);

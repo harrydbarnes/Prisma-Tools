@@ -158,6 +158,8 @@ describe('campaign history feature', () => {
         expect(featureScript)
             .toMatch(/window\.addEventListener\('pageshow',\s*handlePageShow\)/);
         expect(featureScript)
+            .toMatch(/document\.addEventListener\('visibilitychange',\s*handleVisibilityChange\)/);
+        expect(featureScript)
             .not.toMatch(/window\.addEventListener\('unload',/);
     });
 
@@ -708,6 +710,189 @@ describe('campaign history feature', () => {
         );
         await flushPromises();
         expect(localStore.campaignHistoryEntries).toHaveLength(1);
+        dom.window.close();
+    });
+
+    test('supports middle-click, ctrl-click, and right-click context menu on campaign cards', async () => {
+        const testCampaignUrl = 'https://groupmuk-prisma.mediaocean.com/campaign-management/#campaign-id=CP100';
+        const { dom } = createPage({
+            url: dashboardUrl,
+            entries: [
+                {
+                    key: 'campaign:CP100',
+                    campaignId: 'CP100',
+                    cpNumber: 'CP100',
+                    campaignName: 'Test Target Campaign',
+                    url: testCampaignUrl,
+                    firstVisitedAt: 100,
+                    lastVisitedAt: 100
+                }
+            ]
+        });
+        const { window } = dom;
+        const { document } = window;
+
+        window.open = jest.fn();
+        Object.assign(window.navigator, {
+            clipboard: {
+                writeText: jest.fn().mockResolvedValue(undefined)
+            }
+        });
+
+        await flushPromises();
+        document.getElementById('toolshed-campaign-history-nav').click();
+        await flushPromises();
+
+        const card = document.querySelector('.toolshed-campaign-history-result button');
+        expect(card).not.toBeNull();
+
+        // 1. Middle-click (auxclick with button: 1) opens in new tab
+        card.dispatchEvent(new window.MouseEvent('auxclick', {
+            bubbles: true,
+            cancelable: true,
+            button: 1
+        }));
+        expect(window.open).toHaveBeenCalledWith(testCampaignUrl, '_blank');
+
+        // 2. Ctrl+click opens in new tab
+        window.open.mockClear();
+        card.dispatchEvent(new window.MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            ctrlKey: true
+        }));
+        expect(window.open).toHaveBeenCalledWith(testCampaignUrl, '_blank');
+
+        // 3. Right-click (contextmenu) opens custom context menu
+        card.dispatchEvent(new window.MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 150,
+            clientY: 200
+        }));
+
+        const menu = document.getElementById('toolshed-campaign-history-context-menu');
+        expect(menu).not.toBeNull();
+        const items = Array.from(menu.querySelectorAll('.toolshed-campaign-history-context-item'));
+        expect(items).toHaveLength(4);
+        expect(items[0].textContent).toBe('Open in new tab');
+        expect(items[1].textContent).toBe('Copy campaign');
+        expect(items[2].textContent).toBe('Copy campaign link');
+        expect(items[3].textContent).toBe('Copy campaign name');
+
+        // 4. Test "Open in new tab" item
+        window.open.mockClear();
+        items[0].click();
+        expect(window.open).toHaveBeenCalledWith(testCampaignUrl, '_blank');
+        expect(document.getElementById('toolshed-campaign-history-context-menu')).toBeNull();
+
+        // 4b. Test "Copy campaign" item
+        card.dispatchEvent(new window.MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 150,
+            clientY: 200
+        }));
+        const menuCopy = document.getElementById('toolshed-campaign-history-context-menu');
+        const copyCampaignBtn = Array.from(menuCopy.querySelectorAll('.toolshed-campaign-history-context-item'))
+            .find(el => el.textContent === 'Copy campaign');
+        copyCampaignBtn.click();
+        expect(window.location.href).toContain('&osModalId=prsm-cm-cmpcopy');
+        expect(document.getElementById('toolshed-campaign-history-context-menu')).toBeNull();
+
+        // 5. Test "Copy campaign link"
+        card.dispatchEvent(new window.MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 150,
+            clientY: 200
+        }));
+        const menu2 = document.getElementById('toolshed-campaign-history-context-menu');
+        const copyLinkItem = Array.from(menu2.querySelectorAll('.toolshed-campaign-history-context-item'))
+            .find(el => el.textContent.includes('Copy campaign link'));
+        copyLinkItem.click();
+        expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(testCampaignUrl);
+
+        // 6. Test "Copy campaign name"
+        card.dispatchEvent(new window.MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 150,
+            clientY: 200
+        }));
+        const menu3 = document.getElementById('toolshed-campaign-history-context-menu');
+        const copyNameItem = Array.from(menu3.querySelectorAll('.toolshed-campaign-history-context-item'))
+            .find(el => el.textContent.includes('Copy campaign name'));
+        copyNameItem.click();
+        expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith('Test Target Campaign');
+
+        // 7. Test dismissal via Escape key
+        card.dispatchEvent(new window.MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 150,
+            clientY: 200
+        }));
+        expect(document.getElementById('toolshed-campaign-history-context-menu')).not.toBeNull();
+        document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(document.getElementById('toolshed-campaign-history-context-menu')).toBeNull();
+
+        dom.window.close();
+    });
+
+    test('clicking outside the open history panel triggers the close animation', async () => {
+        const { dom } = createPage();
+        const { window } = dom;
+        const { document } = window;
+
+        await flushPromises();
+
+        const navLink = document.getElementById('toolshed-campaign-history-nav');
+        expect(navLink).not.toBeNull();
+
+        navLink.click();
+        await flushPromises();
+
+        const panel = document.getElementById('toolshed-campaign-history-panel');
+        expect(panel).not.toBeNull();
+        expect(panel.hidden).toBe(false);
+        expect(panel.classList.contains('is-closing')).toBe(false);
+
+        // Wait for the outside-click listener delay (10ms)
+        await wait(25);
+
+        // Clicking inside the panel should not close it
+        panel.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+        expect(panel.hidden).toBe(false);
+        expect(panel.classList.contains('is-closing')).toBe(false);
+
+        // Clicking outside the panel (e.g. on body) triggers the close animation
+        document.body.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+        expect(panel.classList.contains('is-closing')).toBe(true);
+
+        dom.window.close();
+    });
+
+    test('clicking the navigation link while the panel is open toggles it closed', async () => {
+        const { dom } = createPage();
+        const { window } = dom;
+        const { document } = window;
+
+        await flushPromises();
+
+        const navLink = document.getElementById('toolshed-campaign-history-nav');
+        navLink.click();
+        await flushPromises();
+
+        const panel = document.getElementById('toolshed-campaign-history-panel');
+        expect(panel).not.toBeNull();
+        expect(panel.hidden).toBe(false);
+        expect(panel.classList.contains('is-closing')).toBe(false);
+
+        // Clicking nav link again closes panel with animation
+        navLink.click();
+        expect(panel.classList.contains('is-closing')).toBe(true);
+
         dom.window.close();
     });
 });

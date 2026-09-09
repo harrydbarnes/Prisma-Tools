@@ -50,6 +50,7 @@
     let panelCloseTarget = null;
     let panelCloseTransitionHandler = null;
     let panelGeometryCleanupTimer = null;
+    let historyOutsideClickHandler = null;
     let navigationObserver = null;
     let navigationObservedRoots = new Set();
     let navigationReconciliationQueued = false;
@@ -689,9 +690,42 @@
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', 'm9 18 6-6-6-6');
             svg.appendChild(path);
+        } else if (name === 'new-tab') {
+            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path1.setAttribute('d', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6');
+            const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path2.setAttribute('d', 'M15 3h6v6');
+            const path3 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path3.setAttribute('d', 'm10 14 11-11');
+            svg.append(path1, path2, path3);
+        } else if (name === 'copy') {
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', '9');
+            rect.setAttribute('y', '9');
+            rect.setAttribute('width', '13');
+            rect.setAttribute('height', '13');
+            rect.setAttribute('rx', '2');
+            rect.setAttribute('ry', '2');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1');
+            svg.append(rect, path);
+        } else if (name === 'link') {
+            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path1.setAttribute('d', 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71');
+            const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path2.setAttribute('d', 'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71');
+            svg.append(path1, path2);
+        } else if (name === 'text') {
+            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path1.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+            const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path2.setAttribute('d', 'M14 2v6h6');
+            const path3 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path3.setAttribute('d', 'M16 13H8M16 17H8M10 9H8');
+            svg.append(path1, path2, path3);
         }
 
-        svg.querySelectorAll('circle, path').forEach(shape => {
+        svg.querySelectorAll('circle, path, rect').forEach(shape => {
             shape.setAttribute('fill', 'none');
             shape.setAttribute('stroke', 'currentColor');
             shape.setAttribute('stroke-width', '1.8');
@@ -1031,12 +1065,22 @@
         link.addEventListener('click', event => {
             event.preventDefault();
             event.stopPropagation();
-            openHistoryPanel();
+            const panel = document.getElementById(PANEL_ID);
+            if (panel && !panel.hidden && !panel.classList.contains('is-closing')) {
+                closeHistoryPanel();
+            } else {
+                openHistoryPanel();
+            }
         });
         link.addEventListener('keydown', event => {
             if (event.key !== ' ') return;
             event.preventDefault();
-            openHistoryPanel();
+            const panel = document.getElementById(PANEL_ID);
+            if (panel && !panel.hidden && !panel.classList.contains('is-closing')) {
+                closeHistoryPanel();
+            } else {
+                openHistoryPanel();
+            }
         });
 
         // Append after the current native options. This keeps History as the
@@ -1059,6 +1103,169 @@
         button.setAttribute('aria-label', label);
         if (iconName) button.appendChild(createSvgIcon(iconName));
         return button;
+    }
+
+    let activeContextMenu = null;
+
+    function closeContextMenu() {
+        if (!activeContextMenu) return;
+        activeContextMenu.remove();
+        activeContextMenu = null;
+        document.removeEventListener('pointerdown', handleContextMenuOutsideInteraction);
+        document.removeEventListener('keydown', handleContextMenuKeydown);
+    }
+
+    function handleContextMenuOutsideInteraction(event) {
+        if (activeContextMenu && !activeContextMenu.contains(event.target)) {
+            closeContextMenu();
+        }
+    }
+
+    function handleContextMenuKeydown(event) {
+        if (event.key === 'Escape') {
+            closeContextMenu();
+        }
+    }
+
+    function findResultEntryFromEvent(event) {
+        const target = event.target;
+        if (!target) return null;
+        const button = target.closest?.(`button[${HISTORY_KEY_ATTRIBUTE}]`) ||
+            target.closest?.('.toolshed-campaign-history-result')?.querySelector?.(`button[${HISTORY_KEY_ATTRIBUTE}]`);
+        if (!button) return null;
+        const key = button.getAttribute(HISTORY_KEY_ATTRIBUTE);
+        return historyEntries.find(item => item.key === key) || null;
+    }
+
+    function getCopyCampaignUrl(url) {
+        if (!url) return '';
+        if (url.includes('prsm-cm-cmpcopy')) return url;
+        if (url.includes('osModalId=')) {
+            return url.replace(/osModalId=[^&]*/, 'osModalId=prsm-cm-cmpcopy');
+        }
+        return url + '&osModalId=prsm-cm-cmpcopy';
+    }
+
+    async function copyToClipboard(text) {
+        if (!text) return false;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+        } catch (_error) {}
+        try {
+            if (chrome.runtime?.sendMessage) {
+                const response = await chrome.runtime.sendMessage({ action: 'copyToClipboard', text });
+                return response?.status === 'success';
+            }
+        } catch (_error) {}
+        return false;
+    }
+
+    function createContextMenuItem(label, iconName, onClick) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'toolshed-campaign-history-context-item';
+        item.setAttribute('role', 'menuitem');
+        if (iconName) {
+            item.appendChild(createSvgIcon(iconName));
+        }
+        const span = document.createElement('span');
+        span.textContent = label;
+        item.appendChild(span);
+
+        item.addEventListener('click', event => {
+            event.stopPropagation();
+            onClick(event, item);
+        });
+        return item;
+    }
+
+    function openContextMenu(entry, x, y) {
+        closeContextMenu();
+
+        const menu = document.createElement('div');
+        menu.id = 'toolshed-campaign-history-context-menu';
+        menu.className = 'toolshed-campaign-history-context-menu';
+        menu.setAttribute('role', 'menu');
+        menu.setAttribute('aria-label', `Options for ${entry.campaignName || entry.cpNumber || 'campaign'}`);
+
+        // 1. Open in new tab
+        const newTabItem = createContextMenuItem('Open in new tab', 'new-tab', () => {
+            closeContextMenu();
+            window.open(entry.url, '_blank');
+        });
+        menu.appendChild(newTabItem);
+
+        // 2. Copy campaign (opens Prisma copy modal)
+        const copyCampaignItem = createContextMenuItem('Copy campaign', 'copy', event => {
+            const copyUrl = getCopyCampaignUrl(entry.url);
+            closeContextMenu();
+            if (event.ctrlKey || event.metaKey) {
+                window.open(copyUrl, '_blank');
+                return;
+            }
+            closeHistoryPanel();
+            if (copyUrl !== window.location.href) {
+                window.location.href = copyUrl;
+            }
+        });
+        copyCampaignItem.title = 'Start a campaign copy in Prisma';
+        menu.appendChild(copyCampaignItem);
+
+        // Divider
+        const divider = document.createElement('div');
+        divider.className = 'toolshed-campaign-history-context-divider';
+        divider.setAttribute('role', 'separator');
+        menu.appendChild(divider);
+
+        // 3. Copy campaign link (to clipboard)
+        const copyLinkItem = createContextMenuItem('Copy campaign link', 'link', async (_event, btn) => {
+            const success = await copyToClipboard(entry.url);
+            const labelSpan = btn.querySelector('span');
+            if (labelSpan) labelSpan.textContent = success ? 'Copied link!' : 'Failed to copy';
+            window.setTimeout(() => closeContextMenu(), 500);
+        });
+        menu.appendChild(copyLinkItem);
+
+        // 4. Copy campaign name (to clipboard)
+        const copyNameItem = createContextMenuItem('Copy campaign name', 'text', async (_event, btn) => {
+            const nameToCopy = entry.campaignName || entry.cpNumber || entry.campaignId || '';
+            const success = await copyToClipboard(nameToCopy);
+            const labelSpan = btn.querySelector('span');
+            if (labelSpan) labelSpan.textContent = success ? 'Copied name!' : 'Failed to copy';
+            window.setTimeout(() => closeContextMenu(), 500);
+        });
+        menu.appendChild(copyNameItem);
+
+        document.body.appendChild(menu);
+        activeContextMenu = menu;
+
+        // Viewport bounds calculation
+        const menuRect = menu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 800;
+        const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 600;
+
+        let posX = x;
+        let posY = y;
+
+        if (posX + menuRect.width > viewportWidth - 8) {
+            posX = Math.max(8, viewportWidth - menuRect.width - 8);
+        }
+        if (posY + menuRect.height > viewportHeight - 8) {
+            posY = Math.max(8, viewportHeight - menuRect.height - 8);
+        }
+
+        menu.style.left = `${posX}px`;
+        menu.style.top = `${posY}px`;
+
+        newTabItem.focus();
+
+        window.setTimeout(() => {
+            document.addEventListener('pointerdown', handleContextMenuOutsideInteraction);
+            document.addEventListener('keydown', handleContextMenuKeydown);
+        }, 0);
     }
 
     function createHistoryPageButton(className, label, symbol, pageDelta) {
@@ -1143,6 +1350,7 @@
         );
         clearButton.hidden = true;
         clearButton.addEventListener('click', () => {
+            closeContextMenu();
             input.value = '';
             clearButton.hidden = true;
             historyPageIndex = 0;
@@ -1151,6 +1359,7 @@
         });
         search.appendChild(clearButton);
         input.addEventListener('input', () => {
+            closeContextMenu();
             clearButton.hidden = !input.value;
             historyPageIndex = 0;
             renderHistoryResults();
@@ -1188,14 +1397,50 @@
         resultList.id = 'toolshed-campaign-history-results';
         resultList.className = 'toolshed-campaign-history-results';
         resultList.setAttribute('role', 'list');
-        resultList.addEventListener('click', event => {
-            const resultButton = event.target.closest?.(`button[${HISTORY_KEY_ATTRIBUTE}]`);
-            if (!resultButton) return;
-            const key = resultButton.getAttribute(HISTORY_KEY_ATTRIBUTE);
-            const entry = historyEntries.find(item => item.key === key);
+
+        resultList.addEventListener('mousedown', event => {
+            if (event.button === 1) {
+                // Prevent browser autoscroll cursor on middle click
+                event.preventDefault();
+            }
+        });
+
+        resultList.addEventListener('auxclick', event => {
+            if (event.button !== 1) return; // Middle click only
+            const entry = findResultEntryFromEvent(event);
             if (!entry?.url) return;
+            event.preventDefault();
+            event.stopPropagation();
+            closeContextMenu();
+            window.open(entry.url, '_blank');
+        });
+
+        resultList.addEventListener('click', event => {
+            const entry = findResultEntryFromEvent(event);
+            if (!entry?.url) return;
+
+            if (event.ctrlKey || event.metaKey) {
+                event.preventDefault();
+                closeContextMenu();
+                window.open(entry.url, '_blank');
+                return;
+            }
+
+            closeContextMenu();
             closeHistoryPanel();
             if (entry.url !== window.location.href) window.location.href = entry.url;
+        });
+
+        resultList.addEventListener('contextmenu', event => {
+            const entry = findResultEntryFromEvent(event);
+            if (!entry?.url) return;
+            event.preventDefault();
+            event.stopPropagation();
+            openContextMenu(entry, event.clientX, event.clientY);
+        });
+
+        resultList.addEventListener('scroll', () => {
+            closeContextMenu();
         });
         panel.appendChild(resultList);
 
@@ -1456,6 +1701,7 @@
 
     function toggleExpanded(panel) {
         if (!panel) return;
+        closeContextMenu();
         const searchInput = panel?.querySelector('#toolshed-campaign-history-search-input');
         const shouldRestoreSearchFocus = document.activeElement === searchInput;
         const expanded = !panel.classList.contains('is-expanded');
@@ -1593,6 +1839,7 @@
 
     function changeHistoryPage(delta) {
         if (!Number.isInteger(delta) || delta === 0 || typeof document === 'undefined') return;
+        closeContextMenu();
         const panel = document.getElementById(PANEL_ID);
         const input = panel?.querySelector('#toolshed-campaign-history-search-input');
         if (!panel || panel.hidden || panel.classList.contains('is-expanded') ||
@@ -1779,10 +2026,37 @@
         renderHistoryResults();
         loadHistory();
         panel.querySelector('#toolshed-campaign-history-search-input')?.focus();
+
+        if (historyOutsideClickHandler) {
+            document.removeEventListener('click', historyOutsideClickHandler);
+            historyOutsideClickHandler = null;
+        }
+        const handleOutsideClick = event => {
+            const currentPanel = document.getElementById(PANEL_ID);
+            if (!currentPanel || currentPanel.hidden || currentPanel.classList.contains('is-closing')) return;
+            if (currentPanel.contains(event.target)) return;
+            if (activeContextMenu && activeContextMenu.contains(event.target)) return;
+            const navLinks = findNavigationLinks();
+            if (navLinks.some(link => link.contains(event.target))) return;
+            closeHistoryPanel({ animate: true });
+        };
+        historyOutsideClickHandler = handleOutsideClick;
+        window.setTimeout(() => {
+            const currentPanel = document.getElementById(PANEL_ID);
+            if (currentPanel && !currentPanel.hidden && historyOutsideClickHandler === handleOutsideClick) {
+                document.addEventListener('click', handleOutsideClick);
+            }
+        }, 10);
+
         return true;
     }
 
     function closeHistoryPanel({ animate = true } = {}) {
+        if (historyOutsideClickHandler) {
+            document.removeEventListener('click', historyOutsideClickHandler);
+            historyOutsideClickHandler = null;
+        }
+        closeContextMenu();
         const panel = document.getElementById(PANEL_ID);
         if (!panel || panel.hidden) return;
         if (animate) startPanelClose(panel);
@@ -1812,6 +2086,10 @@
         if (!settingsReady || !viewEnabled || !isPrismaPage()) return;
         ensureNavigationObserver();
         ensureNavigationLink();
+    }
+
+    function handleVisibilityChange() {
+        if (document.visibilityState === 'visible') scheduleNavigationReconciliation();
     }
 
     function apply() {
@@ -1848,6 +2126,7 @@
         window.addEventListener('popstate', handleRouteChange);
         window.addEventListener('pagehide', removeNavigationObserver);
         window.addEventListener('pageshow', handlePageShow);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         readSettings().then(settings => {
             viewEnabled = settings[VIEW_SETTING_KEY] !== false;
@@ -1884,6 +2163,9 @@
         handleRouteChange,
         isCampaignRoute,
         filterHistoryEntries,
-        getCampaignSnapshot
+        getCampaignSnapshot,
+        getCopyCampaignUrl,
+        openContextMenu,
+        closeContextMenu
     };
 })();

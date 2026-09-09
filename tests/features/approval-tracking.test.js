@@ -305,6 +305,29 @@ describe('Approval Tracking Content Script UI', () => {
         expect(btn.classList.contains('is-all-approved')).toBe(true);
     });
 
+    test('injects promptly when Prisma mounts its banner inside Shadow DOM after initialization', async () => {
+        document.getElementById('banner-controls').remove();
+        localData[APPROVED_CAMPAIGNS_KEY] = [
+            { campaignId: 'CP3GQJ6', campaignName: 'Spring 2026', approvedAt: Date.now() }
+        ];
+
+        window.approvalTrackingFeature.initialize();
+        await Promise.resolve();
+
+        const banner = document.createElement('mo-banner');
+        const shadowRoot = banner.attachShadow({ mode: 'open' });
+        const controls = document.createElement('div');
+        controls.innerHTML = '<button class="switch-account-button">Switch Accounts</button><mo-banner-user-menu></mo-banner-user-menu>';
+        shadowRoot.appendChild(controls);
+        document.body.appendChild(banner);
+        await new Promise(r => setTimeout(r, 10));
+
+        const btn = shadowRoot.querySelector('.toolshed-approval-banner-button');
+        expect(btn).not.toBeNull();
+        expect(btn.textContent).toContain('1/1 Campaign Approved');
+        expect(scriptCode).not.toMatch(/waitForElementInShadow\('mo-banner-user-menu'/);
+    });
+
     test('hides banner button when no tracked campaigns exist', async () => {
         localData[APPROVED_CAMPAIGNS_KEY] = [];
         localData[PENDING_APPROVAL_KEY] = {};
