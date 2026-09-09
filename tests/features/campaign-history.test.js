@@ -140,6 +140,10 @@ describe('campaign history feature', () => {
             .toMatch(/width:\s*52px/i);
         expect(cssRule(contentCss, '.toolshed-campaign-history-page-button'))
             .toMatch(/height:\s*32px/i);
+        expect(cssRule(contentCss, '.toolshed-campaign-history-nav-label'))
+            .toMatch(/transform:\s*translateY\(-0\.5px\)/i);
+        expect(featureScript)
+            .toMatch(/toolshed-campaign-history-nav-label[\s\S]*?translateY\(-0\.5px\)/i);
         expect(contentCss)
             .toMatch(/@keyframes\s+toolshed-campaign-history-page-next/);
         expect(contentCss)

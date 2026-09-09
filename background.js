@@ -1,5 +1,6 @@
 import { handleHelpGuidesPanelEvent, messageHandlers } from './background/message-handlers.js';
 import { migrateStats } from './background/stats-manager.js';
+import { setupApprovalAlarm, pollPendingApprovals, ALARM_NAME as APPROVAL_ALARM_NAME } from './background/approval-polling.js';
 
 chrome.sidePanel?.onOpened?.addListener(info => handleHelpGuidesPanelEvent(info, true)
   .catch(error => console.error('Failed to sync opened Help Guides panel:', error)));
@@ -8,8 +9,11 @@ chrome.sidePanel?.onClosed?.addListener(info => handleHelpGuidesPanelEvent(info,
 
 // --- Alarms and Notifications ---
 
+setupApprovalAlarm();
+
 chrome.runtime.onInstalled.addListener((details) => {
   migrateStats();
+  setupApprovalAlarm();
   if (!chrome.runtime || !chrome.runtime.id) return;
 
   if (details?.reason === 'install') {
@@ -97,6 +101,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   try {
     if (alarm.name === 'timesheetReminder') {
       await triggerTimesheetNotification();
+    } else if (alarm.name === APPROVAL_ALARM_NAME) {
+      await pollPendingApprovals();
     }
   } catch (error) {
     console.error(`Error handling alarm "${alarm.name}":`, error);

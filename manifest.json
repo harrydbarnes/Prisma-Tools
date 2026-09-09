@@ -121,9 +121,15 @@
         "features/help-guides-launcher.js",
         "features/onboarding-tour.js",
         "features/applearn-replace.js",
+        "features/approval-tracking.js",
         "content.js"
       ],
-      "css": ["approvers.css", "content.css", "features/feedback-modal.css"]
+      "css": [
+        "approvers.css",
+        "content.css",
+        "features/feedback-modal.css",
+        "features/approval-tracking.css"
+      ]
     }
   ],
   "web_accessible_resources": [{

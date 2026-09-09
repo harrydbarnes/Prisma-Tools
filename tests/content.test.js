@@ -166,6 +166,7 @@ describe('Content Script Main Logic', () => {
             'dstAssuranceFeature',
             'approverPastingFeature',
             'swapAccountsFeature',
+            'approvalTrackingFeature',
             'autoCopyUrlFeature',
             'orderIdCopyFeature',
             'orderViewToggleFeature',
@@ -195,7 +196,9 @@ describe('Content Script Main Logic', () => {
             handleAutoCopy: jest.fn(),
             checkSelection: jest.fn(),
             syncAll: jest.fn(),
-            checkAndAddCopyButtons: jest.fn()
+            checkAndAddCopyButtons: jest.fn(),
+            injectBannerButton: jest.fn(),
+            checkLiveWorkflowWidget: jest.fn()
         }]));
         const logoMock = { shouldReplaceLogoOnThisPage: jest.fn(() => false) };
 
@@ -214,6 +217,7 @@ describe('Content Script Main Logic', () => {
         expect(dashboardMocks.loadingFactsFeature.initialize).toHaveBeenCalledTimes(1);
         expect(dashboardMocks.bannerUsernameFeature.initialize).toHaveBeenCalledTimes(1);
         expect(dashboardMocks.campaignHistoryFeature.initialize).toHaveBeenCalledTimes(1);
+        expect(dashboardMocks.approvalTrackingFeature.initialize).toHaveBeenCalledTimes(1);
         expect(dashboardMocks.productCodeLimitWarningFeature.initialize).not.toHaveBeenCalled();
         expect(dashboardMocks.placementCounterFeature.initialize).not.toHaveBeenCalled();
         expect(dashboardMocks.dstAssuranceFeature.initialize).not.toHaveBeenCalled();

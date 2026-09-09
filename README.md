@@ -1,8 +1,12 @@
 # Ops Toolshed Chrome Extension 🛠️
 
-**Version 1.9** • Built for Media Operations & Planning teams
+**Current version: 1.9** • Built for Media Operations & Planning teams
 
 Ops Toolshed is a Google Chrome extension that supercharges Mediaocean Prisma and streamlines day-to-day campaign workflows. It automates repetitive tasks, adds one-click navigation and exports, flags budget and product code issues, provides quick access to approvers and standard operating procedures, and centralises agency tools.
+
+## What's new in 1.9
+- **Campaign Approval Tracking:** Monitors submitted campaigns in the background every 5 minutes, notifies users with an in-page toast alert when marked as Approved, displays an `x/y Campaign Approved` status notice with dropdown list next to Switch Accounts, and enables one-click navigation to open approved campaigns in a new tab.
+- **Campaign History:** Adds global search for visited campaigns by name, client, CP number, CL/PR/CA reference, or supplier with local logging and paginated browsing.
 
 ---
 
@@ -87,6 +91,7 @@ All enhancements can be independently toggled in **Settings**:
 | **DST Assurance** | Displays DST Booked badges and verifies Meta 2% Location Fees for compliant booking setups. |
 | **Order ID Copy** | One-click button to copy Order IDs without version suffixes from the Orders sidebar or summary. |
 | **Approver Workflow** | Quick approver search, favourite approvers, batch email copying, and submission email tracking. |
+| **Approval Tracking** | Monitors submitted campaigns in the background every 5 minutes and notifies you via toast and banner when marked Approved. |
 | **Placement Counter** | Displays the real-time count of selected placements in the Prisma grid. |
 | **Auto Copy Campaign URL** | Copies clean, shareable campaign links with a single click. |
 | **Add Campaign Automation** | Opens full details automatically, selects Digital media mix, and hides unused sections. |

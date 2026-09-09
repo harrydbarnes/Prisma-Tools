@@ -1357,6 +1357,10 @@ div[slot="right"].ai-style-change-1 {
     gap: 6px;
 }
 
+.toolshed-campaign-history-nav-label {
+    transform: translateY(-0.5px);
+}
+
 .toolshed-campaign-history-nav svg {
     display: block;
     width: 15px;
@@ -1365,9 +1369,10 @@ div[slot="right"].ai-style-change-1 {
 }
 
 .toolshed-campaign-history-nav .toolshed-campaign-history-icon-history {
-    width: 16px;
-    height: 16px;
-    flex-basis: 16px;
+    width: 15px;
+    height: 15px;
+    flex-basis: 15px;
+    transform: translateY(-1px);
 }
 
 .toolshed-campaign-history-nav:focus-visible {

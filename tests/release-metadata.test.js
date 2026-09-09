@@ -43,7 +43,7 @@ describe('release metadata', () => {
         }
     });
 
-    test('keeps the current release focused on Campaign History and current fixes', () => {
+    test('keeps the current release focused on Campaign Approval Tracking, Campaign History, and current fixes', () => {
         const toolshed = fs.readFileSync(path.join(root, 'toolshed.html'), 'utf8');
         const dom = new JSDOM(toolshed);
 
@@ -51,15 +51,21 @@ describe('release metadata', () => {
             const currentRelease = dom.window.document.querySelector('#release-notes .release');
             const items = Array.from(currentRelease.querySelectorAll('li'));
 
-            expect(items).toHaveLength(5);
-            expect(items[0].textContent).toContain('Campaign History');
+            expect(items).toHaveLength(8);
+            expect(items[0].textContent).toContain('Campaign Approval Tracking');
             expect(items[0].querySelector('.release-badge').dataset.releaseType).toBe('new');
-            expect(items[1].textContent).toContain('four campaigns per page');
-            expect(items[1].querySelector('.release-badge').dataset.releaseType).toBe('improved');
-            expect(items[2].textContent).toContain('Redistribute action');
-            expect(items[2].querySelector('.release-badge').dataset.releaseType).toBe('fixed');
-            expect(items[4].textContent).toContain('permanent Moe chat bubble');
+            expect(items[1].textContent).toContain('Campaign History');
+            expect(items[1].querySelector('.release-badge').dataset.releaseType).toBe('new');
+            expect(items[2].textContent).toContain('four campaigns per page');
+            expect(items[2].querySelector('.release-badge').dataset.releaseType).toBe('improved');
+            expect(items[3].textContent).toContain('Campaign Approval Tracking');
+            expect(items[3].querySelector('.release-badge').dataset.releaseType).toBe('improved');
+            expect(items[4].textContent).toContain('Not Submitted');
             expect(items[4].querySelector('.release-badge').dataset.releaseType).toBe('fixed');
+            expect(items[5].textContent).toContain('Redistribute action');
+            expect(items[5].querySelector('.release-badge').dataset.releaseType).toBe('fixed');
+            expect(items[7].textContent).toContain('permanent Moe chat bubble');
+            expect(items[7].querySelector('.release-badge').dataset.releaseType).toBe('fixed');
         } finally {
             dom.window.close();
         }

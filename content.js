@@ -288,6 +288,7 @@ async function mainContentScriptInit() {
         { getFeature: () => window.campaignTabTitleFeature, when: route => isPrismaLike && route.isCampaignWorkspace },
         { getFeature: () => window.planToBuyRedirectFeature, when: () => isPrismaLike },
         { getFeature: () => window.campaignHistoryFeature, when: () => isPrismaLike },
+        { getFeature: () => window.approvalTrackingFeature, when: () => isPrismaLike },
         { getFeature: () => window.swapAccountsFeature, when: () => isPrismaLike || isAura },
         { getFeature: () => window.orderIdCopyFeature, when: route => isPrismaLike && route.isCampaignWorkspace },
         { getFeature: () => window.orderViewToggleFeature, when: route => isPrismaLike && route.isCampaignWorkspace },
@@ -409,6 +410,7 @@ async function mainContentScriptInit() {
         if (hasDirtyFeature('shell')) {
             window.appLearnFeature?.applyTransparency?.();
             window.helpGuidesLauncherFeature?.ensureLauncher?.();
+            window.approvalTrackingFeature?.injectBannerButton?.();
         }
     }
 
@@ -439,6 +441,7 @@ async function mainContentScriptInit() {
                     window.approverPastingFeature?.handleManageFavouritesButton?.();
                     window.approverPastingFeature?.addRecipientHistoryControls?.();
                     window.approverPastingFeature?.handleSubmittedRecipientDisplay?.();
+                    window.approvalTrackingFeature?.checkLiveWorkflowWidget?.();
                 }
                 if (hasDirtyFeature('chat')) {
                     window.gmiChatFeature?.handleGmiChatButton?.();

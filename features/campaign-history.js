@@ -888,10 +888,14 @@
                 display: inline-flex;
                 gap: 6px;
             }
+            #${NAVIGATION_ID} .toolshed-campaign-history-nav-label {
+                transform: translateY(-0.5px);
+            }
             #${NAVIGATION_ID} svg {
                 display: block;
                 flex: 0 0 15px;
                 height: 15px;
+                transform: translateY(-1px);
                 width: 15px;
             }
             #${NAVIGATION_ID}:hover {
@@ -1086,7 +1090,7 @@
         header.className = 'toolshed-campaign-history-header';
         const headingGroup = document.createElement('div');
         headingGroup.className = 'toolshed-campaign-history-heading-group';
-        headingGroup.appendChild(createTextElement('h2', '', 'Campaign history'));
+        headingGroup.appendChild(createTextElement('h2', '', 'Campaign History'));
         headingGroup.lastElementChild.id = 'toolshed-campaign-history-title';
         const count = createTextElement('span', 'toolshed-campaign-history-count', '');
         count.id = 'toolshed-campaign-history-count';
@@ -1693,14 +1697,14 @@
 
         if (historyLoadError) {
             count.textContent = '';
-            status.textContent = 'Campaign history is temporarily unavailable. Try again after reloading Prisma.';
+            status.textContent = 'Campaign History is temporarily unavailable. Try again after reloading Prisma.';
             updateHistoryPagination(panel, 0, false);
             return;
         }
 
         if (!historyLoaded) {
             count.textContent = '';
-            status.textContent = 'Loading campaign history…';
+            status.textContent = 'Loading Campaign History…';
             updateHistoryPagination(panel, 0, false);
             return;
         }
@@ -1712,7 +1716,7 @@
         if (historyEntries.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'toolshed-campaign-history-empty';
-            empty.appendChild(createTextElement('strong', '', 'No campaign history yet'));
+            empty.appendChild(createTextElement('strong', '', 'No Campaign History yet'));
             empty.appendChild(createTextElement('p', '', loggingEnabled
                 ? 'Visit a campaign and it will appear here for later searching.'
                 : 'Campaign visit logging is turned off in Settings.'));

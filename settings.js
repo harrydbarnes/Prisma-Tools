@@ -24,6 +24,9 @@ const SETTINGS_DEFAULTS = Object.freeze({
     helpGuidesEnabled: true,
     approverSidebarEnhancementsEnabled: true,
     approverSubmittedRecipientDisplayEnabled: true,
+    approvalTrackingEnabled: true,
+    approvalBannerIndicatorEnabled: true,
+    approvalToastNotificationEnabled: true,
     actualiseBulkExportEnabled: true,
     prismaReminderFrequency: 'daily',
     prismaCountdownDuration: '5',
@@ -321,6 +324,9 @@ const FEATURE_SETTING_PREVIEWS = {
     countPlacementsSelectedToggle: ['Count Placements Selected', 'Displays the number of selected placement rows beside Prisma’s selection tools.', '12 selected'],
     approverSidebarEnhancementsToggle: ['Approver Sidebar Enhancements', 'Makes the Approver sidebar easier to scan and use, including fast approver entry and recipient history controls.', 'Approvers'],
     approverSubmittedRecipientDisplayToggle: ['Submitted approval recipients', 'Shows the email address(es) captured when the current user submits a campaign for approval.', 'Submitted to robert.walker@wppmedia.com'],
+    approvalTrackingToggle: ['Track campaign approvals', 'Monitors submitted campaigns in the background every 5 minutes to see when they are approved.', 'Approval tracking'],
+    approvalBannerIndicatorToggle: ['Show approved campaigns in banner', 'Displays an approved campaigns counter and dropdown list next to Switch Accounts.', 'Approved list'],
+    approvalToastNotificationToggle: ['Toast notification on campaign approval', 'Shows an interactive notification when a campaign is approved with a shortcut to open it.', 'Campaign approved'],
     actualiseBulkExportToggle: ['Actualise bulk export', 'Exports each visible Actualise month and combines the results into one CSV-ready file.', 'Export all months'],
     campaignTabTitleToggle: ['Campaign tab title', 'Uses the active campaign name as the browser tab title.', 'Spring Launch | Prisma'],
     planToBuyRedirectToggle: ['Open Plan campaign links in Buy', 'Opens Buy when a campaign Plan URL is loaded directly. Clicking Prisma’s Plan tab still opens Plan.', 'Plan link → Buy'],
@@ -968,6 +974,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupToggle('helpGuidesToggle', 'helpGuidesEnabled', 'Help Guides setting saved:', settings);
     setupToggle('approverSidebarEnhancementsToggle', 'approverSidebarEnhancementsEnabled', 'Approver Sidebar Enhancements setting saved:', settings);
     setupToggle('approverSubmittedRecipientDisplayToggle', 'approverSubmittedRecipientDisplayEnabled', 'Submitted approval recipients setting saved:', settings);
+    setupToggle('approvalTrackingToggle', 'approvalTrackingEnabled', 'Approval Tracking setting saved:', settings);
+    setupToggle('approvalBannerIndicatorToggle', 'approvalBannerIndicatorEnabled', 'Approval Banner Indicator setting saved:', settings);
+    setupToggle('approvalToastNotificationToggle', 'approvalToastNotificationEnabled', 'Approval Toast Notification setting saved:', settings);
     setupToggle('actualiseBulkExportToggle', 'actualiseBulkExportEnabled', 'Actualise bulk export setting saved:', settings);
  
     // Prisma Reminders 

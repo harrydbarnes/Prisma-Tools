@@ -6,6 +6,13 @@ const ACCOUNT_SWITCH_RETURN_URLS_KEY = 'accountSwitchReturnUrlsByTab';
 const ACCOUNT_SWITCH_RETURN_TTL_MS = 2 * 60 * 1000;
 import { scrapeAndDownloadCsv } from './meta-billing-scraper.js';
 import { handleTrackStat } from './stats-manager.js';
+import {
+    trackCampaignApproval,
+    dismissApprovedCampaign,
+    dismissPendingCampaign,
+    clearAllApprovedCampaigns,
+    pollPendingApprovals
+} from './approval-polling.js';
 
 const PRISMA_DASHBOARD_URL = 'https://groupmuk-prisma.mediaocean.com/campaign-management/#osAppId=prsm-cm-spa&osPspId=cm-dashboard&route=campaigns';
 const MAX_RETRIES = 10;
@@ -405,6 +412,31 @@ async function requestCampaignDetailsBasicFocus(request, sender, sendResponse) {
     }
 }
 
+async function handleTrackCampaignApproval(request, sender, sendResponse) {
+    const result = await trackCampaignApproval(request.campaign);
+    sendResponse(result);
+}
+
+async function handleDismissApprovedCampaign(request, sender, sendResponse) {
+    const result = await dismissApprovedCampaign(request.campaignId);
+    sendResponse(result);
+}
+
+async function handleDismissPendingCampaign(request, sender, sendResponse) {
+    const result = await dismissPendingCampaign(request.campaignId);
+    sendResponse(result);
+}
+
+async function handleClearAllApprovedCampaigns(request, sender, sendResponse) {
+    const result = await clearAllApprovedCampaigns();
+    sendResponse(result);
+}
+
+async function handleCheckApprovalStatusNow(request, sender, sendResponse) {
+    await pollPendingApprovals();
+    sendResponse({ status: 'success' });
+}
+
 export const messageHandlers = {
     showTimesheetNotification,
     createTimesheetAlarm,
@@ -427,5 +459,10 @@ export const messageHandlers = {
     rememberAccountSwitchUrl,
     getAccountSwitchUrl,
     clearAccountSwitchUrl,
+    trackCampaignApproval: handleTrackCampaignApproval,
+    dismissApprovedCampaign: handleDismissApprovedCampaign,
+    dismissPendingCampaign: handleDismissPendingCampaign,
+    clearAllApprovedCampaigns: handleClearAllApprovedCampaigns,
+    checkApprovalStatusNow: handleCheckApprovalStatusNow,
     TRACK_STAT: handleTrackStat
 };
